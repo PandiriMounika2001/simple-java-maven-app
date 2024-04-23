@@ -30,7 +30,7 @@ pipeline {
             }
             steps {
                 // Deploy to Dev environment
-                sh 'deploy_script_dev.sh'
+                sh 'echo "Deploying to Dev environment"'
             }
         }
 
@@ -40,7 +40,7 @@ pipeline {
             }
             steps {
                 // Deploy to UAT environment
-                sh 'deploy_script_uat.sh'
+                sh 'echo "Deploying to UAT environment"'
             }
         }
 
@@ -50,7 +50,7 @@ pipeline {
             }
             steps {
                 // Deploy to Prod environment
-                sh 'deploy_script_prod.sh'
+                sh 'echo "Deploying to prod environment"'
             }
         }
     }
