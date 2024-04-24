@@ -11,7 +11,7 @@ pipeline {
             steps {
                 script {
                     git credentialsId: '2239466d-ce75-41c1-ab88-537d24881ecc', url: 'https://github.com/PandiriMounika2001/simple-java-maven-app.git'
-                    sh 'git branch -r | awk \'{print $1}\' ORS=\'\\n\' >>branch.txt'
+                    sh 'git branch -r | awk \'{print $1}\' | sed "s/origin\\///" > branch.txt'
                 }
             }
         }
@@ -19,7 +19,8 @@ pipeline {
         stage('Choose Branch') {
             steps {
                 script {
-                    def branches = readFile('branch.txt').trim().split('\n')
+                    def branches = readFile('branch.txt').trim().readLines()
+                    branches = branches.collect { it.replaceAll('^\\s*', '') }
                     env.BRANCH_NAME = input message: 'Please choose the branch to build',
                                             ok: 'Validate!',
                                             parameters: [choice(name: 'Branch', choices: branches, description: 'Branch to build')]
@@ -32,7 +33,7 @@ pipeline {
                 echo 'Checking out the code...'
                 checkout([
                     $class: 'GitSCM',
-                    branches: [[name: "refs/heads/${env.BRANCH_NAME}"]],
+                    branches: [[name: "refs/remotes/origin/${env.BRANCH_NAME}"]],
                     userRemoteConfigs: [[
                         url: 'https://github.com/PandiriMounika2001/simple-java-maven-app.git',
                         credentialsId: '2239466d-ce75-41c1-ab88-537d24881ecc'
