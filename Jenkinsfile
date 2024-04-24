@@ -17,21 +17,28 @@ pipeline {
         }
         stage('Checkout') {
             steps {
-                script {
-                    branchName = input(message: 'Which branch do you want to build?', parameters: [choice(choices: branchNames, description: 'Select branch to build')])
-                    checkout([$class: 'GitSCM', branches: [[name: "*/${branchName}"]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/PandiriMounika2001/simple-java-maven-app.git']]])
-                }
+                echo 'Checking out code...'
+                checkout scm
             }
         }
         stage('Build and Test') {
             steps {
-                bat 'mvn -B -DskipTests clean install'
+                echo 'Building and Testing...'
+                bat 'mvn clean package'
             }
         }
         stage('Deploy') {
             steps {
-                bat 'mvn -B clean deploy'
+                echo 'Deploying...'
             }
+        }
+    }
+    post {
+        always {
+            echo 'This will always run'
+        }
+        success {
+            input 'Deploy to production?'
         }
     }
 }
