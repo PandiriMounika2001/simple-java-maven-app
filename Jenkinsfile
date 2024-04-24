@@ -10,7 +10,7 @@ pipeline {
         stage('Checkout SCM') {
             steps {
                 script {
-                    git credentialsId: '2239466d-ce75-41c1-ab88-537d24881ecc', url: 'https://github.com/PandiriMounika2001/simple-java-maven-app'
+                    git credentialsId: '2239466d-ce75-41c1-ab88-537d24881ecc', url: 'https://github.com/PandiriMounika2001/simple-java-maven-app.git'
                     sh 'git branch -r | awk \'{print $1}\' ORS=\'\\n\' >>branch.txt'
                 }
             }
@@ -34,7 +34,7 @@ pipeline {
                     $class: 'GitSCM',
                     branches: [[name: "refs/heads/${env.BRANCH_NAME}"]],
                     userRemoteConfigs: [[
-                        url: 'https://github.com/PandiriMounika2001/simple-java-maven-app',
+                        url: 'https://github.com/PandiriMounika2001/simple-java-maven-app.git',
                         credentialsId: '2239466d-ce75-41c1-ab88-537d24881ecc'
                     ]]
                 ])
