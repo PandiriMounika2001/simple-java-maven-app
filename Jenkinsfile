@@ -2,40 +2,48 @@ pipeline {
     agent any
  
     environment {
-        // Define environment variables
-        JAVA_HOME = "/usr/lib/jvm/java-11-openjdk-11.0.23.0.9-3.el9.x86_64"  // Path to Java 11
-        MAVEN_HOME = "/usr/share/maven" // Path to Maven
-    }
- 
-    parameters {
-        // Define input parameters for the pipeline
-        choice(
-            name: 'ENVIRONMENT',
-            choices: ['dev', 'uat', 'prod'],
-            description: 'Select the target environment: dev, uat, or prod.'
-        )
-        choice(
-            name: 'BRANCH',
-            choices: ['master', 'development', 'feature branch'],
-            description: 'Select the branch to build from: main, development, or feature branch.'
-        )
+        JAVA_HOME = "/usr/lib/jvm/java-11-openjdk-amd64"
+        MAVEN_HOME = "/usr/share/maven"
     }
  
     stages {
+        stage('Checkout SCM') {
+            steps {
+                script {
+                    git credentialsId: '2239466d-ce75-41c1-ab88-537d24881ecc', url: 'https://github.com/PandiriMounika2001/simple-java-maven-app'
+                    sh 'git branch -r | awk \'{print $1}\' ORS=\'\\n\' >>branch.txt'
+                }
+            }
+        }
+ 
+        stage('Choose Branch') {
+            steps {
+                script {
+                    def branches = readFile('branch.txt')
+                    env.BRANCH_NAME = input message: 'Please choose the branch to build',
+                                            ok: 'Validate!',
+                                            parameters: [choice(name: 'Branch', choices: branches, description: 'Branch to build')]
+                }
+            }
+        }
+ 
         stage('Checkout') {
             steps {
                 echo 'Checking out the code...'
-                // Checkout the selected branch
-                checkout([$class: 'GitSCM', branches: [[name: "refs/heads/${params.BRANCH}"]],
-                          doGenerateSubmoduleConfigurations: false,
-                          extensions: [],
-                          userRemoteConfigs: [[url: 'https://github.com/PandiriMounika2001/simple-java-maven-app']]])
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: "refs/heads/${env.BRANCH_NAME}"]],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/PandiriMounika2001/simple-java-maven-app',
+                        credentialsId: '2239466d-ce75-41c1-ab88-537d24881ecc'
+                    ]]
+                ])
             }
         }
  
         stage('Build and Test') {
             steps {
-                echo "Building and testing the project for environment: ${params.ENVIRONMENT}..."
+                echo "Building and testing the project..."
                 sh "${MAVEN_HOME}/bin/mvn clean install"
                 sh "${MAVEN_HOME}/bin/mvn test"
             }
@@ -43,20 +51,15 @@ pipeline {
  
         stage('Deploy') {
             steps {
-                echo "Deploying the project to ${params.ENVIRONMENT} environment..."
-                // Add your deployment commands here. For example:
-                sh "${MAVEN_HOME}/bin/mvn deploy -P${params.ENVIRONMENT}"
+                echo "Deploying the project..."
+                sh "${MAVEN_HOME}/bin/mvn deploy"
             }
         }
     }
  
     post {
         always {
-            // This block runs at the end of the pipeline regardless of the outcome
-            // Collect test reports (if tests were run)
-            junit 'target/surefire-reports/**/*.xml' // Collect and report test results
- 
-            // Archive artifacts (if needed)
+            junit 'target/surefire-reports/**/*.xml'
             archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
         }
  
@@ -68,4 +71,4 @@ pipeline {
             echo 'Pipeline failed.'
         }
     }
-}
+
