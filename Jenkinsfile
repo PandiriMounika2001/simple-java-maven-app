@@ -1,11 +1,11 @@
 pipeline {
     agent any
- 
+
     environment {
         JAVA_HOME = "/usr/lib/jvm/java-11-openjdk-amd64"
         MAVEN_HOME = "/usr/share/maven"
     }
- 
+
     stages {
         stage('Checkout SCM') {
             steps {
@@ -15,18 +15,18 @@ pipeline {
                 }
             }
         }
- 
+
         stage('Choose Branch') {
             steps {
                 script {
-                    def branches = readFile('branch.txt')
+                    def branches = readFile('branch.txt').trim().split('\n')
                     env.BRANCH_NAME = input message: 'Please choose the branch to build',
                                             ok: 'Validate!',
                                             parameters: [choice(name: 'Branch', choices: branches, description: 'Branch to build')]
                 }
             }
         }
- 
+
         stage('Checkout') {
             steps {
                 echo 'Checking out the code...'
@@ -40,7 +40,7 @@ pipeline {
                 ])
             }
         }
- 
+
         stage('Build and Test') {
             steps {
                 echo "Building and testing the project..."
@@ -48,7 +48,7 @@ pipeline {
                 sh "${MAVEN_HOME}/bin/mvn test"
             }
         }
- 
+
         stage('Deploy') {
             steps {
                 echo "Deploying the project..."
@@ -56,17 +56,17 @@ pipeline {
             }
         }
     }
- 
+
     post {
         always {
             junit 'target/surefire-reports/**/*.xml'
             archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
         }
- 
+
         success {
             echo 'Pipeline completed successfully!'
         }
- 
+
         failure {
             echo 'Pipeline failed.'
         }
