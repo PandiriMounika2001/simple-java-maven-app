@@ -9,7 +9,7 @@ pipeline {
         stage('Choose Branch') {
             steps {
                 script {
-                    branches = sh(returnStdout: true, script: 'git ls-remote --heads origin').trim().split("\\r?\\n")
+                    branches = bat(returnStdout: true, script: 'git ls-remote --heads origin').trim().split("\\r?\\n")
                     branchNames = branches.collect { it.split("\\s+")[1].replaceAll("refs/heads/", "") }
                     echo "Available branches: ${branchNames}"
                 }
@@ -35,5 +35,6 @@ pipeline {
         }
     }
 }
+
 
 
