@@ -33,7 +33,20 @@ pipeline {
             }
         }
     }
+    post {
+        always {
+            echo 'This will always run'
+        }
+        success {
+            echo 'Build and deployment successful!'
+            input 'Deploy to production?'
+        }
+        failure {
+            echo 'Build failed!'
+        }
+    }    
 }
+
 
 
 
