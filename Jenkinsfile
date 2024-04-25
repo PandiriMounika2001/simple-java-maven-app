@@ -33,14 +33,6 @@ pipeline {
             }
         }
     }
-    post {
-        always {
-            echo 'This will always run'
-        }
-        success {
-            input 'Deploy to production?'
-        }
-    }    
 }
 
 
