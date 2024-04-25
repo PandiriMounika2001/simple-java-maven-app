@@ -1,51 +1,98 @@
 pipeline {
     agent any
+    
+    environment {
+        DOCKER_IMAGE = 'simple-java-maven-app'
+        DOCKER_REGISTRY = 'https://hub.docker.com/r/mounika2001'
+    }
+    
     stages {
-        stage('Declarative: Checkout SCM') {
-            steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/PandiriMounika2001/simple-java-maven-app.git']]])
-            }
-        }
-        stage('Choose Branch') {
-            steps {
-                script {
-                    branches = bat(returnStdout: true, script: 'git ls-remote --heads origin').trim().split("\\r?\\n")
-                    branchNames = branches.collect { it.split("\\s+")[1].replaceAll("refs/heads/", "") }
-                    echo "Available branches: ${branchNames}"
-                }
-            }
-        }
         stage('Checkout') {
             steps {
-                echo 'Checking out code...'
                 checkout scm
             }
         }
-        stage('Build and Test') {
+        
+        stage('Build') {
             steps {
-                echo 'Building and Testing...'
+                script {
+                    docker.build("${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+                }
             }
         }
-        stage('Deploy') {
+        
+        stage('Deploy to DEV') {
+            when {
+                branch 'master'
+            }
+            environment {
+                ENVIRONMENT = 'dev'
+            }
             steps {
-                echo 'Deploying...'
-                // Add your deployment steps here
+                script {
+                    docker.withRegistry("${DOCKER_REGISTRY}", 'docker-hub-credentials') {
+                        dockerImage.push("${env.DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+                        dockerImage.push("${env.DOCKER_IMAGE}:latest")
+                    }
+                    sh "kubectl apply -f ./k8s/${env.ENVIRONMENT}.yaml"
+                }
+            }
+        }
+        
+        stage('Deploy to UAT') {
+            when {
+                branch 'release/*'
+            }
+            environment {
+                ENVIRONMENT = 'uat'
+            }
+            steps {
+                script {
+                    docker.withRegistry("${DOCKER_REGISTRY}", 'docker-hub-credentials') {
+                        dockerImage.push("${env.DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+                        dockerImage.push("${env.DOCKER_IMAGE}:latest")
+                    }
+                    sh "kubectl apply -f ./k8s/${env.ENVIRONMENT}.yaml"
+                }
+            }
+        }
+        
+        stage('Deploy to PROD') {
+            when {
+                branch 'main'
+            }
+            environment {
+                ENVIRONMENT = 'prod'
+            }
+            steps {
+                script {
+                    docker.withRegistry("${DOCKER_REGISTRY}", 'docker-hub-credentials') {
+                        dockerImage.push("${env.DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+                        dockerImage.push("${env.DOCKER_IMAGE}:latest")
+                    }
+                    sh "kubectl apply -f ./k8s/${env.ENVIRONMENT}.yaml"
+                }
             }
         }
     }
+    
     post {
         always {
             echo 'This will always run'
         }
         success {
             echo 'Build and deployment successful!'
-            input 'Deploy to production?'
         }
         failure {
             echo 'Build failed!'
         }
-    }    
+    }
 }
+
+
+
+
+
 
 
 
