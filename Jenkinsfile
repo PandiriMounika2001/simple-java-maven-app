@@ -2,8 +2,8 @@ pipeline {
     agent any
     
     environment {
-        DOCKER_IMAGE = 'simple-java-maven-app'
-        DOCKER_REGISTRY = 'https://hub.docker.com/r/mounika2001'
+        DOCKER_IMAGE = 'httpd'
+        DOCKER_REGISTRY = 'mounika2001/httpd' // Docker Hub repository path
     }
     
     stages {
@@ -16,7 +16,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    docker.build("${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+                    docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
                 }
             }
         }
@@ -30,9 +30,9 @@ pipeline {
             }
             steps {
                 script {
-                    docker.withRegistry("${DOCKER_REGISTRY}", 'docker-hub-credentials') {
-                        dockerImage.push("${env.DOCKER_IMAGE}:${env.BUILD_NUMBER}")
-                        dockerImage.push("${env.DOCKER_IMAGE}:latest")
+                    docker.withRegistry('https://hub.docker.com', 'docker-hub-credentials') {
+                        dockerImage.push("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+                        dockerImage.push("${DOCKER_IMAGE}:latest")
                     }
                     sh "kubectl apply -f ./k8s/${env.ENVIRONMENT}.yaml"
                 }
@@ -48,9 +48,9 @@ pipeline {
             }
             steps {
                 script {
-                    docker.withRegistry("${DOCKER_REGISTRY}", 'docker-hub-credentials') {
-                        dockerImage.push("${env.DOCKER_IMAGE}:${env.BUILD_NUMBER}")
-                        dockerImage.push("${env.DOCKER_IMAGE}:latest")
+                    docker.withRegistry('https://hub.docker.com', 'docker-hub-credentials') {
+                        dockerImage.push("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+                        dockerImage.push("${DOCKER_IMAGE}:latest")
                     }
                     sh "kubectl apply -f ./k8s/${env.ENVIRONMENT}.yaml"
                 }
@@ -66,9 +66,9 @@ pipeline {
             }
             steps {
                 script {
-                    docker.withRegistry("${DOCKER_REGISTRY}", 'docker-hub-credentials') {
-                        dockerImage.push("${env.DOCKER_IMAGE}:${env.BUILD_NUMBER}")
-                        dockerImage.push("${env.DOCKER_IMAGE}:latest")
+                    docker.withRegistry('https://hub.docker.com', 'docker-hub-credentials') {
+                        dockerImage.push("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+                        dockerImage.push("${DOCKER_IMAGE}:latest")
                     }
                     sh "kubectl apply -f ./k8s/${env.ENVIRONMENT}.yaml"
                 }
