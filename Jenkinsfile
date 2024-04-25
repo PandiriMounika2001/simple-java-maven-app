@@ -30,6 +30,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo 'Deploying...'
+                // Add your deployment steps here
             }
         }
     }
@@ -40,7 +41,7 @@ pipeline {
         success {
             input 'Deploy to production?'
         }
-    }
+    }    
 }
 
 
